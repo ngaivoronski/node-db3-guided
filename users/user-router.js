@@ -1,11 +1,12 @@
 const express = require('express');
 
 const db = require('../data/db-config.js');
+const Users = require("./user-model");
 
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  db('users')
+  Users.allUsers()
   .then(users => {
     res.json(users);
   })
@@ -15,11 +16,8 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-  const { id } = req.params;
-
-  db('users').where({ id })
-  .then(users => {
-    const user = users[0];
+  Users.findById(req.params.id)
+  .then(user => {
 
     if (user) {
       res.json(user);
@@ -32,17 +30,29 @@ router.get('/:id', (req, res) => {
   });
 });
 
-router.post('/', (req, res) => {
-  const userData = req.body;
-
-  db('users').insert(userData)
-  .then(ids => {
-    res.status(201).json({ created: ids[0] });
+router.get('/:id/posts', (req, res) => {
+  Users.findUserPosts(req.params.id)
+  .then(posts => {
+    res.status(200).json(posts);
   })
   .catch(err => {
-    res.status(500).json({ message: 'Failed to create new user' });
-  });
+    es.status(500).json({ message: 'Failed to create new user' });
+  })
 });
+
+router.post("/", (req, res) => {
+  const userData = req.body;
+
+  Users.add(userData)
+      .then(user => {
+          res.status(201).json(user);
+      })
+      .catch(err => {
+          console.log("Error inserting user:", err);
+          res.status(500).json({ message: "Failed to create new user" });
+      });
+});
+
 
 router.put('/:id', (req, res) => {
   const { id } = req.params;
